@@ -54,4 +54,4 @@ docker-compose logs
 
 ## Дашборд для графаны:
 
-https://
+[Дашборд](https://grafana.com/dashboards/9315)
