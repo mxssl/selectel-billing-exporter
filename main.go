@@ -50,30 +50,6 @@ type selectelBillingResponce struct {
 	} `json:"data"`
 }
 
-func init() {
-	prometheus.MustRegister(selectelBillingSelectelBonus)
-	prometheus.MustRegister(selectelBillingSelectelVoice)
-	prometheus.MustRegister(selectelBillingSelectelBalance)
-
-	prometheus.MustRegister(selectelBillingVPCBonus)
-	prometheus.MustRegister(selectelBillingVPCVoice)
-	prometheus.MustRegister(selectelBillingVPCSum)
-	prometheus.MustRegister(selectelBillingVPCBalance)
-	prometheus.MustRegister(selectelBillingVPCDebt)
-
-	prometheus.MustRegister(selectelBillingStorageBonus)
-	prometheus.MustRegister(selectelBillingStorageVoice)
-	prometheus.MustRegister(selectelBillingStorageSum)
-	prometheus.MustRegister(selectelBillingStorageBalance)
-	prometheus.MustRegister(selectelBillingStorageDebt)
-
-	prometheus.MustRegister(selectelBillingVmwareBonus)
-	prometheus.MustRegister(selectelBillingVmwareVoice)
-	prometheus.MustRegister(selectelBillingVmwareSum)
-	prometheus.MustRegister(selectelBillingVmwareBalance)
-	prometheus.MustRegister(selectelBillingVmwareDebt)
-}
-
 func main() {
 	log.Println("Selectel Billing Exporter запущен")
 
@@ -121,173 +97,71 @@ func main() {
 	}
 	os.Exit(0)
 }
+func initGauges() map[string]prometheus.Gauge {
+	selectelNames := make(map[string][]string)
+	selectelStructFields := []string{"bonus", "voice", "sum", "balance", "dept"}
+	selectelNames["selectel"] = []string{"bonus", "voice", "balance"}
+	selectelNames["storage"] = selectelStructFields
+	selectelNames["vmware"] = selectelStructFields
+	selectelNames["vpc"] = selectelStructFields
 
-func recordMetrics() {
-	go func() {
-		for {
-			s := selectelBillingResponce{}
+	promGauges := make(map[string]prometheus.Gauge)
 
-			// делаем запрос к Selectel API
-			if err := getSelectelBilling(&s); err != nil {
-				log.Printf("Не удалось получить ответ от Selectel API! Ошибка: %v\n", err)
-			}
-
-			// selectel
-			selectelBillingSelectelBonus.Set(float64(s.Data.Selectel.Bonus))
-			selectelBillingSelectelVoice.Set(float64(s.Data.Selectel.Voice))
-			selectelBillingSelectelBalance.Set(float64(s.Data.Selectel.Balance))
-
-			// VPC
-			selectelBillingVPCBonus.Set(float64(s.Data.Vpc.Bonus))
-			selectelBillingVPCVoice.Set(float64(s.Data.Vpc.Voice))
-			selectelBillingVPCSum.Set(float64(s.Data.Vpc.Sum))
-			selectelBillingVPCBalance.Set(float64(s.Data.Vpc.Balance))
-			selectelBillingVPCDebt.Set(float64(s.Data.Vpc.Debt))
-
-			// storage
-			selectelBillingStorageBonus.Set(float64(s.Data.Storage.Bonus))
-			selectelBillingStorageVoice.Set(float64(s.Data.Storage.Voice))
-			selectelBillingStorageSum.Set(float64(s.Data.Storage.Sum))
-			selectelBillingStorageBalance.Set(float64(s.Data.Storage.Balance))
-			selectelBillingStorageDebt.Set(float64(s.Data.Storage.Debt))
-
-			// vmware
-			selectelBillingVmwareBonus.Set(float64(s.Data.Vmware.Bonus))
-			selectelBillingVmwareVoice.Set(float64(s.Data.Vmware.Voice))
-			selectelBillingVmwareSum.Set(float64(s.Data.Vmware.Sum))
-			selectelBillingVmwareBalance.Set(float64(s.Data.Vmware.Balance))
-			selectelBillingVmwareDebt.Set(float64(s.Data.Vmware.Debt))
-
-			time.Sleep(time.Hour * 1)
+	for name, fields := range selectelNames {
+		for _, field := range fields {
+			promGauges["selectel_billing_"+name+"_"+field] = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: "selectel_billing_" + name + "_" + field,
+				Help: "selectel billing " + name + " " + field,
+			})
 		}
-	}()
+	}
+
+	for _, v := range promGauges {
+		prometheus.MustRegister(v)
+	}
+	return promGauges
 }
 
-var (
-	selectelBillingVPCBonus = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vpc_bonus",
-		Help: "Selectel billing vpc bonus",
-	})
-)
+func recordMetrics() {
+	gauge := initGauges()
+	for {
+		s := selectelBillingResponce{}
 
-var (
-	selectelBillingVPCVoice = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vpc_voice",
-		Help: "Selectel billing vpc voice",
-	})
-)
+		// делаем запрос к Selectel API
+		if err := getSelectelBilling(&s); err != nil {
+			log.Printf("Не удалось получить ответ от Selectel API! Ошибка: %v\n", err)
+			continue
+		}
 
-var (
-	selectelBillingVPCSum = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vpc_sum",
-		Help: "Selectel billing vpc sum",
-	})
-)
+		// selectel
+		gauge["selectel_billing_selectel_bonus"].Set(float64(s.Data.Selectel.Bonus))
+		gauge["selectel_billing_selectel_voice"].Set(float64(s.Data.Selectel.Voice))
+		gauge["selectel_billing_selectel_balance"].Set(float64(s.Data.Selectel.Balance))
 
-var (
-	selectelBillingVPCBalance = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vpc_balance",
-		Help: "Selectel billing vpc balance",
-	})
-)
+		// VPC
+		gauge["selectel_billing_vpc_bonus"].Set(float64(s.Data.Vpc.Bonus))
+		gauge["selectel_billing_vpc_voice"].Set(float64(s.Data.Vpc.Voice))
+		gauge["selectel_billing_vpc_sum"].Set(float64(s.Data.Vpc.Sum))
+		gauge["selectel_billing_vpc_balance"].Set(float64(s.Data.Vpc.Balance))
+		gauge["selectel_billing_vpc_debt"].Set(float64(s.Data.Vpc.Debt))
 
-var (
-	selectelBillingVPCDebt = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vpc_debt",
-		Help: "Selectel billing vpc debt",
-	})
-)
+		// storage
+		gauge["selectel_billing_storage_bonus"].Set(float64(s.Data.Storage.Bonus))
+		gauge["selectel_billing_storage_voice"].Set(float64(s.Data.Storage.Voice))
+		gauge["selectel_billing_storage_sum"].Set(float64(s.Data.Storage.Sum))
+		gauge["selectel_billing_storage_balance"].Set(float64(s.Data.Storage.Balance))
+		gauge["selectel_billing_storage_debt"].Set(float64(s.Data.Storage.Debt))
 
-var (
-	selectelBillingSelectelBonus = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_bonus",
-		Help: "Selectel billing bonus",
-	})
-)
+		// vmware
+		gauge["selectel_billing_vmware_bonus"].Set(float64(s.Data.Vmware.Bonus))
+		gauge["selectel_billing_vmware_voice"].Set(float64(s.Data.Vmware.Voice))
+		gauge["selectel_billing_vmware_sum"].Set(float64(s.Data.Vmware.Sum))
+		gauge["selectel_billing_vmware_balance"].Set(float64(s.Data.Vmware.Balance))
+		gauge["selectel_billing_vmware_debt"].Set(float64(s.Data.Vmware.Debt))
 
-var (
-	selectelBillingSelectelVoice = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_voice",
-		Help: "Selectel billing debt",
-	})
-)
-
-var (
-	selectelBillingSelectelBalance = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_balance",
-		Help: "Selectel billing balance",
-	})
-)
-
-var (
-	selectelBillingStorageBonus = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_storage_bonus",
-		Help: "Selectel billing storage bonus",
-	})
-)
-
-var (
-	selectelBillingStorageVoice = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_storage_voice",
-		Help: "Selectel billing storage voice",
-	})
-)
-
-var (
-	selectelBillingStorageSum = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_storage_sum",
-		Help: "Selectel billing storage sum",
-	})
-)
-
-var (
-	selectelBillingStorageBalance = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_storage_balance",
-		Help: "Selectel billing storage balance",
-	})
-)
-
-var (
-	selectelBillingStorageDebt = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_storage_debt",
-		Help: "Selectel billing storage debt",
-	})
-)
-
-var (
-	selectelBillingVmwareBonus = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vmware_bonus",
-		Help: "Selectel billing vmware bonus",
-	})
-)
-
-var (
-	selectelBillingVmwareVoice = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vmware_voice",
-		Help: "Selectel billing vmware voice",
-	})
-)
-
-var (
-	selectelBillingVmwareSum = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vmware_sum",
-		Help: "Selectel billing vmware sum",
-	})
-)
-
-var (
-	selectelBillingVmwareBalance = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vmware_balance",
-		Help: "Selectel billing vmware balance",
-	})
-)
-
-var (
-	selectelBillingVmwareDebt = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "selectel_billing_vmware_debt",
-		Help: "Selectel billing vmware debt",
-	})
-)
+		time.Sleep(time.Hour * 1)
+	}
+}
 
 func getSelectelBilling(selectelMetrics *selectelBillingResponce) error {
 	client := &http.Client{}
