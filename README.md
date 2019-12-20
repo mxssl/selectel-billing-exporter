@@ -14,7 +14,7 @@
 
 Создаем `docker-compose.yml` файл:
 
-```
+```yaml
 version: '3'
 
 services:
@@ -30,28 +30,41 @@ services:
 
 Далее запускаем экспортер:
 
-```
+```sh
 docker-compose up -d
 ```
 
 Проверить работу экспортера можно следующими командами:
 
-```
+```sh
 docker-compose ps
 docker-compose logs
 ```
 
 Метрики доступны по url `your_ip:6789/metrics`
 
-## Настройка для prometheus:
+## Настройка для prometheus
 
-```
+```yaml
   - job_name: 'selectel_billing'
     scrape_interval: 60m
     static_configs:
       - targets: ['exporter_ip:6789']
 ```
 
-## Дашборд для графаны:
+## Пример алерта для alertmanager
+
+```yaml
+  - alert: selectel_billing
+    expr: selectel_billing_vpc_balance{job="selectel_billing"} / 100 < 30000
+    for: 180s
+    labels:
+      severity: warning
+    annotations:
+      summary: "{{ $labels.instance }}: В Selectel на счете VPC меньше 30 тыс рублей"
+      description: "Необходимо пополнить счет облака Selectel"
+```
+
+## Дашборд для графаны
 
 [Дашборд](https://grafana.com/dashboards/9315)
