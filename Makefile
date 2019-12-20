@@ -1,34 +1,41 @@
 BINARY_NAME=app
 CURRENT_DIR=$(shell pwd)
+TAG=$(shell git name-rev --tags --name-only $(shell git rev-parse HEAD))
+DOCKER_REGISTRY=mxssl
+export GO111MODULE=on
 
-.PHONY: all build clean lint critic test dep
+.PHONY: all build clean lint critic test
 
 all: build
 
 build:
-	go build -o ${BINARY_NAME} -v
-	chmod +x app
+	go build -v -mod=vendor -o ${BINARY_NAME}
 
 clean:
 	rm -f ${BINARY_NAME}
 
 lint:
-	golangci-lint run
-
-critic:
-	gocritic check-project ${CURRENT_DIR}
+	golangci-lint run -v
 
 test:
 	go test -v ./...
 
 init:
-	GO111MODULE=on go mod init
-
-vendor:
-	GO111MODULE=on go mod vendor
+	go mod init
 
 tidy:
-	GO111MODULE=on go mod tidy
+	go mod tidy
 
-run:
-	GO111MODULE=on go run main.go
+github-release-dry:
+	@echo "TAG: ${TAG}"
+	goreleaser release --rm-dist --snapshot --skip-publish
+
+github-release:
+	@echo "TAG: ${TAG}"
+	goreleaser release --rm-dist
+
+docker-release:
+	@echo "Registry: ${DOCKER_REGISTRY}"
+	@echo "TAG: ${TAG}"
+	docker build --tag ${DOCKER_REGISTRY}/selectel_billing_exporter:${TAG} .
+	docker push ${DOCKER_REGISTRY}/selectel_billing_exporter:${TAG}

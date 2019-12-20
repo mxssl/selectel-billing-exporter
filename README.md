@@ -20,7 +20,7 @@ version: '3'
 services:
   exporter:
     build: .
-    image: mxssl/selectel_billing_exporter
+    image: mxssl/selectel_billing_exporter:0.0.1
     ports:
       - "6789:80"
     restart: always
