@@ -17,36 +17,47 @@ import (
 // TOKEN for selectel API
 var TOKEN string
 
-type selectelBillingResponce struct {
+type selectelBillingResponse struct {
 	Status string `json:"status"`
 	Data   struct {
-		Currency string `json:"currency"`
-		Selectel struct {
-			Bonus   int `json:"bonus"`
-			Voice   int `json:"voice"`
-			Balance int `json:"balance"`
-		} `json:"selectel"`
+		Currency  string `json:"currency"`
+		IsPostpay bool   `json:"is_postpay"`
+		Discount  int    `json:"discount"`
+		Primary   struct {
+			Main  int `json:"main"`
+			Bonus int `json:"bonus"`
+			VkRub int `json:"vk_rub"`
+			Ref   int `json:"ref"`
+			Hold  struct {
+				Main  int `json:"main"`
+				Bonus int `json:"bonus"`
+				VkRub int `json:"vk_rub"`
+			} `json:"hold"`
+		} `json:"primary"`
 		Storage struct {
-			Bonus   int `json:"bonus"`
-			Voice   int `json:"voice"`
-			Sum     int `json:"sum"`
-			Balance int `json:"balance"`
-			Debt    int `json:"debt"`
+			Main       int         `json:"main"`
+			Bonus      int         `json:"bonus"`
+			VkRub      int         `json:"vk_rub"`
+			Prediction interface{} `json:"prediction"`
+			Debt       int         `json:"debt"`
+			Sum        int         `json:"sum"`
 		} `json:"storage"`
-		Vmware struct {
-			Bonus   int `json:"bonus"`
-			Voice   int `json:"voice"`
-			Sum     int `json:"sum"`
-			Balance int `json:"balance"`
-			Debt    int `json:"debt"`
-		} `json:"vmware"`
 		Vpc struct {
-			Bonus   int `json:"bonus"`
-			Voice   int `json:"voice"`
-			Sum     int `json:"sum"`
-			Balance int `json:"balance"`
-			Debt    int `json:"debt"`
+			Main       int         `json:"main"`
+			Bonus      int         `json:"bonus"`
+			VkRub      int         `json:"vk_rub"`
+			Prediction interface{} `json:"prediction"`
+			Debt       int         `json:"debt"`
+			Sum        int         `json:"sum"`
 		} `json:"vpc"`
+		Vmware struct {
+			Main       int         `json:"main"`
+			Bonus      int         `json:"bonus"`
+			VkRub      int         `json:"vk_rub"`
+			Prediction interface{} `json:"prediction"`
+			Debt       int         `json:"debt"`
+			Sum        int         `json:"sum"`
+		} `json:"vmware"`
 	} `json:"data"`
 }
 
@@ -57,7 +68,7 @@ func main() {
 	ok := false
 	TOKEN, ok = os.LookupEnv("TOKEN")
 	if ok != true {
-		log.Fatal("Please set environment variable TOKEN that contains Selectel API token")
+		log.Fatal("Переменная окружения TOKEN, которая должна содержать Selectel API ключ не установлена")
 	}
 	log.Println("Токен успешно установлен!")
 
@@ -97,10 +108,11 @@ func main() {
 	}
 	os.Exit(0)
 }
+
 func initGauges() map[string]prometheus.Gauge {
 	selectelNames := make(map[string][]string)
-	selectelStructFields := []string{"bonus", "voice", "sum", "balance", "dept"}
-	selectelNames["selectel"] = []string{"bonus", "voice", "balance"}
+	selectelStructFields := []string{"main", "bonus", "vk_rub", "debt", "sum"}
+	selectelNames["primary"] = []string{"main", "bonus", "vk_rub", "ref", "hold_main", "hold_bonus", "hold_vk_rub"}
 	selectelNames["storage"] = selectelStructFields
 	selectelNames["vmware"] = selectelStructFields
 	selectelNames["vpc"] = selectelStructFields
@@ -125,7 +137,7 @@ func initGauges() map[string]prometheus.Gauge {
 func recordMetrics() {
 	gauge := initGauges()
 	for {
-		s := selectelBillingResponce{}
+		s := selectelBillingResponse{}
 
 		// делаем запрос к Selectel API
 		if err := getSelectelBilling(&s); err != nil {
@@ -133,40 +145,44 @@ func recordMetrics() {
 			continue
 		}
 
-		// selectel
-		gauge["selectel_billing_selectel_bonus"].Set(float64(s.Data.Selectel.Bonus))
-		gauge["selectel_billing_selectel_voice"].Set(float64(s.Data.Selectel.Voice))
-		gauge["selectel_billing_selectel_balance"].Set(float64(s.Data.Selectel.Balance))
-
-		// VPC
-		gauge["selectel_billing_vpc_bonus"].Set(float64(s.Data.Vpc.Bonus))
-		gauge["selectel_billing_vpc_voice"].Set(float64(s.Data.Vpc.Voice))
-		gauge["selectel_billing_vpc_sum"].Set(float64(s.Data.Vpc.Sum))
-		gauge["selectel_billing_vpc_balance"].Set(float64(s.Data.Vpc.Balance))
-		gauge["selectel_billing_vpc_debt"].Set(float64(s.Data.Vpc.Debt))
+		// primary
+		gauge["selectel_billing_primary_main"].Set(float64(s.Data.Primary.Main))
+		gauge["selectel_billing_primary_bonus"].Set(float64(s.Data.Primary.Bonus))
+		gauge["selectel_billing_primary_vk_rub"].Set(float64(s.Data.Primary.VkRub))
+		gauge["selectel_billing_primary_ref"].Set(float64(s.Data.Primary.Ref))
+		gauge["selectel_billing_primary_hold_main"].Set(float64(s.Data.Primary.Hold.Main))
+		gauge["selectel_billing_primary_hold_bonus"].Set(float64(s.Data.Primary.Hold.Bonus))
+		gauge["selectel_billing_primary_hold_vk_rub"].Set(float64(s.Data.Primary.Hold.VkRub))
 
 		// storage
+		gauge["selectel_billing_storage_main"].Set(float64(s.Data.Storage.Main))
 		gauge["selectel_billing_storage_bonus"].Set(float64(s.Data.Storage.Bonus))
-		gauge["selectel_billing_storage_voice"].Set(float64(s.Data.Storage.Voice))
-		gauge["selectel_billing_storage_sum"].Set(float64(s.Data.Storage.Sum))
-		gauge["selectel_billing_storage_balance"].Set(float64(s.Data.Storage.Balance))
+		gauge["selectel_billing_storage_vk_rub"].Set(float64(s.Data.Storage.VkRub))
 		gauge["selectel_billing_storage_debt"].Set(float64(s.Data.Storage.Debt))
+		gauge["selectel_billing_storage_sum"].Set(float64(s.Data.Storage.Sum))
+
+		// vpc
+		gauge["selectel_billing_vpc_main"].Set(float64(s.Data.Vpc.Main))
+		gauge["selectel_billing_vpc_bonus"].Set(float64(s.Data.Vpc.Bonus))
+		gauge["selectel_billing_vpc_vk_rub"].Set(float64(s.Data.Vpc.VkRub))
+		gauge["selectel_billing_vpc_debt"].Set(float64(s.Data.Vpc.Debt))
+		gauge["selectel_billing_vpc_sum"].Set(float64(s.Data.Vpc.Sum))
 
 		// vmware
+		gauge["selectel_billing_vmware_main"].Set(float64(s.Data.Vmware.Main))
 		gauge["selectel_billing_vmware_bonus"].Set(float64(s.Data.Vmware.Bonus))
-		gauge["selectel_billing_vmware_voice"].Set(float64(s.Data.Vmware.Voice))
-		gauge["selectel_billing_vmware_sum"].Set(float64(s.Data.Vmware.Sum))
-		gauge["selectel_billing_vmware_balance"].Set(float64(s.Data.Vmware.Balance))
+		gauge["selectel_billing_vmware_vk_rub"].Set(float64(s.Data.Vmware.VkRub))
 		gauge["selectel_billing_vmware_debt"].Set(float64(s.Data.Vmware.Debt))
+		gauge["selectel_billing_vmware_sum"].Set(float64(s.Data.Vmware.Sum))
 
 		time.Sleep(time.Hour * 1)
 	}
 }
 
-func getSelectelBilling(selectelMetrics *selectelBillingResponce) error {
+func getSelectelBilling(selectelMetrics *selectelBillingResponse) error {
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", "https://my.selectel.ru/api/v2/billing/balance", nil)
+	req, err := http.NewRequest("GET", "https://my.selectel.ru/api/v3/billing/balance", nil)
 	if err != nil {
 		return err
 	}
