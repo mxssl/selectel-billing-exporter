@@ -6,7 +6,7 @@ Prometheus exporter для получения информации по билл
 
 Экспортер раз в час ходит по url `https://my.selectel.ru/api/v3/billing/balance` с токеном в запросе, получает в json формате инфу по балансу средств на счете и отдает ее по url `/metrics` в формате prometheus.
 
-Для работы экспортера нужно получить API [токен](my.selectel.ru/profile/apikeys):
+Для работы экспортера нужно получить API [токен](https://my.selectel.ru/profile/apikeys):
 
 ## Как запустить
 
