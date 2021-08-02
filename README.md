@@ -40,6 +40,55 @@ docker-compose logs
 
 Метрики доступны по url `your_ip:6789/metrics`
 
+### Запуск в Kubernetes
+```yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selectel-billing
+  namespace: exporters
+spec:
+  selector:
+    matchLabels:
+      component: selectel-billing
+  template:
+    metadata:
+      labels:
+        component: selectel-billing
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: exporter
+          image: mxssl/selectel_billing_exporter:0.0.2
+          command: ["./app"]
+          ports:
+            - containerPort: 80
+          env:
+            - name: TOKEN
+              value: <YOUR-TOKEN>
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: selectel-billing
+  namespace: exporters
+spec:
+  ports:
+    - name: exporter
+      port: 6789
+      targetPort: 80
+  selector:
+    component: selectel-billing
+```
+
+```sh
+kubectl apply -n exporters -f your-file.yaml
+```
+
+Для namespace exporters метрики будут доступны по адресу `selectel-billing.exporters:6789/metrics`
+
 ## Настройка для prometheus
 
 ```yaml
