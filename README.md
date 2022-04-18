@@ -17,7 +17,7 @@ version: '3'
 
 services:
   selectel_exporter:
-    image: mxssl/selectel_billing_exporter:0.0.2
+    image: mxssl/selectel_billing_exporter:1.0.0
     ports:
       - "6789:80"
     restart: always
@@ -41,6 +41,7 @@ docker-compose logs
 Метрики доступны по url `your_ip:6789/metrics`
 
 ### Запуск в Kubernetes
+
 ```yaml
 ---
 apiVersion: apps/v1
