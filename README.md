@@ -10,6 +10,8 @@ Prometheus exporter для получения информации по билл
 
 ## Как запустить
 
+### Запуск с помощью docker-compose
+
 Создаем `docker-compose.yml` файл:
 
 ```yaml
@@ -40,7 +42,12 @@ docker-compose logs
 
 Метрики доступны по url `your_ip:6789/metrics`
 
-### Запуск в Kubernetes
+## Kubernetes
+
+### helm
+
+[Установка helm чарта](https://github.com/mxssl/helm-charts/tree/main/charts/selectel-billing-exporter)
+### Создание манифестов вручную
 
 ```yaml
 ---
@@ -61,7 +68,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: exporter
-          image: mxssl/selectel_billing_exporter:0.0.2
+          image: mxssl/selectel_billing_exporter:1.0.0
           command: ["./app"]
           ports:
             - containerPort: 80
