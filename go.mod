@@ -3,7 +3,7 @@ module github.com/mxssl/selectel_billing_exporter
 require (
 	github.com/jarcoal/httpmock v1.2.0
 	github.com/prometheus/client_golang v1.12.2
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.5
 )
 
 require (
