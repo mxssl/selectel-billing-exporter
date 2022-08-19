@@ -37,5 +37,5 @@ github-release:
 docker-release:
 	@echo "Registry: ${DOCKER_REGISTRY}"
 	@echo "TAG: ${TAG}"
-	docker build --tag ${DOCKER_REGISTRY}/selectel_billing_exporter:${TAG} .
-	docker push ${DOCKER_REGISTRY}/selectel_billing_exporter:${TAG}
+	docker build --tag ${DOCKER_REGISTRY}/selectel-billing-exporter:${TAG} .
+	docker push ${DOCKER_REGISTRY}/selectel-billing-exporter:${TAG}

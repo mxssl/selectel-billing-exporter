@@ -1,8 +1,8 @@
-FROM golang:1.18.0-alpine3.15 as builder
+FROM golang:1.19.0-alpine3.15 as builder
 
 ENV GO111MODULE=on
 
-WORKDIR /go/src/github.com/mxssl/selectel_billing_exporter
+WORKDIR /go/src/github.com/mxssl/selectel-billing-exporter
 COPY . .
 
 # install deps
@@ -17,10 +17,10 @@ RUN CGO_ENABLED=0 \
   go build -v -o app
 
 # copy compiled binary to a clear Alpine Linux image
-FROM alpine:3.15.4
+FROM alpine:3.16.2
 WORKDIR /
 RUN apk add --no-cache \
   ca-certificates
-COPY --from=builder /go/src/github.com/mxssl/selectel_billing_exporter .
+COPY --from=builder /go/src/github.com/mxssl/selectel-billing-exporter .
 RUN chmod +x app
 CMD ["./app"]

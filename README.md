@@ -19,7 +19,7 @@ version: '3'
 
 services:
   selectel_exporter:
-    image: mxssl/selectel_billing_exporter:1.0.0
+    image: mxssl/selectel-billing-exporter:1.0.0
     ports:
       - "6789:80"
     restart: always
@@ -68,7 +68,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: exporter
-          image: mxssl/selectel_billing_exporter:1.0.0
+          image: mxssl/selectel-billing-exporter:1.0.1
           command: ["./app"]
           ports:
             - containerPort: 80
