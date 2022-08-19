@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -12,7 +12,7 @@ func TestSelectelBillingRequest(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	testdata, err := ioutil.ReadFile("testdata/SelectelBillingRespExample.json")
+	testdata, err := os.ReadFile("testdata/SelectelBillingRespExample.json")
 	if err != nil {
 		t.Error(err)
 	}

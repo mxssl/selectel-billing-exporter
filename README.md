@@ -68,7 +68,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: exporter
-          image: mxssl/selectel-billing-exporter:1.0.1
+          image: mxssl/selectel-billing-exporter:1.0.2
           command: ["./app"]
           ports:
             - containerPort: 80

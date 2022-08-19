@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -67,7 +67,7 @@ func main() {
 	log.Println("Устанавливаем Selectel токен...")
 	ok := false
 	TOKEN, ok = os.LookupEnv("TOKEN")
-	if ok != true {
+	if !ok {
 		log.Fatal("Переменная окружения TOKEN, которая должна содержать Selectel API ключ не установлена")
 	}
 	log.Println("Токен успешно установлен!")
@@ -192,7 +192,7 @@ func getSelectelBilling(selectelMetrics *selectelBillingResponse) error {
 		return err
 	}
 
-	temp, err := ioutil.ReadAll(resp.Body)
+	temp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
