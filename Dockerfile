@@ -1,4 +1,4 @@
-FROM golang:1.19.3-alpine3.15 as builder
+FROM golang:1.21.1-alpine3.18 as builder
 
 ENV GO111MODULE=on
 
@@ -12,8 +12,6 @@ RUN apk add --no-cache \
   git
 
 RUN CGO_ENABLED=0 \
-  GOOS=`go env GOHOSTOS` \
-  GOARCH=`go env GOHOSTARCH` \
   go build -v -o app
 
 # copy compiled binary to a clear Alpine Linux image
