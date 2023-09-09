@@ -13,8 +13,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.48.0
 
   docker-release:
     runs-on: ubuntu-latest
@@ -33,11 +31,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.19
+          go-version: "1.20"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

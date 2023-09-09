@@ -6,7 +6,7 @@ Prometheus exporter для получения информации по билл
 
 Экспортер раз в час ходит по url `https://api.selectel.ru/v3/balances` с токеном в запросе, получает в json формате инфу по балансу средств на счете и отдает ее по url `/metrics` в формате prometheus.
 
-Для работы экспортера нужно получить API [токен](https://my.selectel.ru/profile/apikeys):
+Для работы экспортера нужно получить API [токен](https://my.selectel.ru/profile/apikeys)
 
 ## Как запустить
 
@@ -19,7 +19,7 @@ version: '3'
 
 services:
   selectel_exporter:
-    image: mxssl/selectel-billing-exporter:1.0.0
+    image: mxssl/selectel-billing-exporter:1.1.0
     ports:
       - "6789:80"
     restart: always
@@ -47,6 +47,7 @@ docker-compose logs
 ### helm
 
 [Установка helm чарта](https://github.com/mxssl/helm-charts/tree/main/charts/selectel-billing-exporter)
+
 ### Создание манифестов вручную
 
 ```yaml
@@ -65,10 +66,9 @@ spec:
       labels:
         component: selectel-billing
     spec:
-      terminationGracePeriodSeconds: 10
       containers:
         - name: exporter
-          image: mxssl/selectel-billing-exporter:1.0.2
+          image: mxssl/selectel-billing-exporter:1.1.0
           command: ["./app"]
           ports:
             - containerPort: 80
@@ -110,12 +110,12 @@ kubectl apply -n exporters -f your-file.yaml
 
 ```yaml
 - alert: selectel_billing
-  expr: selectel_billing_vpc_main{job="selectel_billing"} / 100 < 30000
+  expr: selectel_billing_final_sum{job="selectel_billing"} < 30000
   for: 180s
   labels:
     severity: warning
   annotations:
-    summary: "{{ $labels.instance }}: В облаке Selectel на счете VPC меньше 30 тыс рублей"
+    summary: "{{ $labels.instance }}: В облаке Selectel на счете меньше 30 тыс рублей"
     description: "Необходимо пополнить счет облака Selectel"
 ```
 

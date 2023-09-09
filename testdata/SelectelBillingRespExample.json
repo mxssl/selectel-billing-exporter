@@ -1,43 +1,10 @@
 {
-    "status": "success",
     "data": {
-        "currency": "rub",
-        "is_postpay": false,
-        "discount": 0,
-        "primary": {
-            "main": 10000,
-            "bonus": 10000,
-            "vk_rub": 0,
-            "ref": 0,
-            "hold": {
-                "main": 0,
-                "bonus": 0,
-                "vk_rub": 0
+        "billings": [
+            {
+                "final_sum": 33218108,
+                "debt_sum": 0
             }
-        },
-        "storage": {
-            "main": 203005,
-            "bonus": 0,
-            "vk_rub": 0,
-            "prediction": null,
-            "debt": 0,
-            "sum": 203005
-        },
-        "vpc": {
-            "main": 11250838,
-            "bonus": 12345,
-            "vk_rub": 0,
-            "prediction": null,
-            "debt": 0,
-            "sum": 11150838
-        },
-        "vmware": {
-            "main": 10000,
-            "bonus": 10000,
-            "vk_rub": 0,
-            "prediction": null,
-            "debt": 0,
-            "sum": 20000
-        }
+        ]
     }
 }

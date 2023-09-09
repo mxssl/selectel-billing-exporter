@@ -18,46 +18,11 @@ import (
 var TOKEN string
 
 type selectelBillingResponse struct {
-	Status string `json:"status"`
-	Data   struct {
-		Currency  string `json:"currency"`
-		IsPostpay bool   `json:"is_postpay"`
-		Discount  int    `json:"discount"`
-		Primary   struct {
-			Main  int `json:"main"`
-			Bonus int `json:"bonus"`
-			VkRub int `json:"vk_rub"`
-			Ref   int `json:"ref"`
-			Hold  struct {
-				Main  int `json:"main"`
-				Bonus int `json:"bonus"`
-				VkRub int `json:"vk_rub"`
-			} `json:"hold"`
-		} `json:"primary"`
-		Storage struct {
-			Main       int         `json:"main"`
-			Bonus      int         `json:"bonus"`
-			VkRub      int         `json:"vk_rub"`
-			Prediction interface{} `json:"prediction"`
-			Debt       int         `json:"debt"`
-			Sum        int         `json:"sum"`
-		} `json:"storage"`
-		Vpc struct {
-			Main       int         `json:"main"`
-			Bonus      int         `json:"bonus"`
-			VkRub      int         `json:"vk_rub"`
-			Prediction interface{} `json:"prediction"`
-			Debt       int         `json:"debt"`
-			Sum        int         `json:"sum"`
-		} `json:"vpc"`
-		Vmware struct {
-			Main       int         `json:"main"`
-			Bonus      int         `json:"bonus"`
-			VkRub      int         `json:"vk_rub"`
-			Prediction interface{} `json:"prediction"`
-			Debt       int         `json:"debt"`
-			Sum        int         `json:"sum"`
-		} `json:"vmware"`
+	Data struct {
+		Billings []struct {
+			FinalSum int `json:"final_sum"`
+			DebtSum  int `json:"debt_sum"`
+		} `json:"billings"`
 	} `json:"data"`
 }
 
@@ -110,23 +75,17 @@ func main() {
 }
 
 func initGauges() map[string]prometheus.Gauge {
-	selectelNames := make(map[string][]string)
-	selectelStructFields := []string{"main", "bonus", "vk_rub", "debt", "sum"}
-	selectelNames["primary"] = []string{"main", "bonus", "vk_rub", "ref", "hold_main", "hold_bonus", "hold_vk_rub"}
-	selectelNames["storage"] = selectelStructFields
-	selectelNames["vmware"] = selectelStructFields
-	selectelNames["vpc"] = selectelStructFields
-
 	promGauges := make(map[string]prometheus.Gauge)
 
-	for name, fields := range selectelNames {
-		for _, field := range fields {
-			promGauges["selectel_billing_"+name+"_"+field] = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: "selectel_billing_" + name + "_" + field,
-				Help: "selectel billing " + name + " " + field,
-			})
-		}
-	}
+	promGauges["selectel_billing_final_sum"] = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "selectel_billing_final_sum",
+		Help: "selectel billing final sum",
+	})
+
+	promGauges["selectel_billing_debt_sum"] = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "selectel_billing_debt_sum",
+		Help: "selectel billing debt sum",
+	})
 
 	for _, v := range promGauges {
 		prometheus.MustRegister(v)
@@ -145,35 +104,9 @@ func recordMetrics() {
 			continue
 		}
 
-		// primary
-		gauge["selectel_billing_primary_main"].Set(float64(s.Data.Primary.Main))
-		gauge["selectel_billing_primary_bonus"].Set(float64(s.Data.Primary.Bonus))
-		gauge["selectel_billing_primary_vk_rub"].Set(float64(s.Data.Primary.VkRub))
-		gauge["selectel_billing_primary_ref"].Set(float64(s.Data.Primary.Ref))
-		gauge["selectel_billing_primary_hold_main"].Set(float64(s.Data.Primary.Hold.Main))
-		gauge["selectel_billing_primary_hold_bonus"].Set(float64(s.Data.Primary.Hold.Bonus))
-		gauge["selectel_billing_primary_hold_vk_rub"].Set(float64(s.Data.Primary.Hold.VkRub))
-
-		// storage
-		gauge["selectel_billing_storage_main"].Set(float64(s.Data.Storage.Main))
-		gauge["selectel_billing_storage_bonus"].Set(float64(s.Data.Storage.Bonus))
-		gauge["selectel_billing_storage_vk_rub"].Set(float64(s.Data.Storage.VkRub))
-		gauge["selectel_billing_storage_debt"].Set(float64(s.Data.Storage.Debt))
-		gauge["selectel_billing_storage_sum"].Set(float64(s.Data.Storage.Sum))
-
-		// vpc
-		gauge["selectel_billing_vpc_main"].Set(float64(s.Data.Vpc.Main))
-		gauge["selectel_billing_vpc_bonus"].Set(float64(s.Data.Vpc.Bonus))
-		gauge["selectel_billing_vpc_vk_rub"].Set(float64(s.Data.Vpc.VkRub))
-		gauge["selectel_billing_vpc_debt"].Set(float64(s.Data.Vpc.Debt))
-		gauge["selectel_billing_vpc_sum"].Set(float64(s.Data.Vpc.Sum))
-
-		// vmware
-		gauge["selectel_billing_vmware_main"].Set(float64(s.Data.Vmware.Main))
-		gauge["selectel_billing_vmware_bonus"].Set(float64(s.Data.Vmware.Bonus))
-		gauge["selectel_billing_vmware_vk_rub"].Set(float64(s.Data.Vmware.VkRub))
-		gauge["selectel_billing_vmware_debt"].Set(float64(s.Data.Vmware.Debt))
-		gauge["selectel_billing_vmware_sum"].Set(float64(s.Data.Vmware.Sum))
+		// записываем метрики
+		gauge["selectel_billing_final_sum"].Set(float64(s.Data.Billings[0].FinalSum))
+		gauge["selectel_billing_debt_sum"].Set(float64(s.Data.Billings[0].DebtSum))
 
 		time.Sleep(time.Hour * 1)
 	}
