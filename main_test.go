@@ -17,7 +17,7 @@ func TestSelectelBillingRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	httpmock.RegisterResponder("GET", "https://my.selectel.ru/api/v3/billing/balance",
+	httpmock.RegisterResponder("GET", "https://api.selectel.ru/v3/balances",
 		httpmock.NewStringResponder(200, string(testdata)))
 
 	expected := selectelBillingResponse{Status: "success", Data: struct {
