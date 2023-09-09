@@ -110,7 +110,7 @@ kubectl apply -n exporters -f your-file.yaml
 
 ```yaml
 - alert: selectel_billing
-  expr: selectel_billing_final_sum{job="selectel_billing"} < 30000
+  expr: selectel_billing_final_sum{job="selectel_billing"} / 100 < 30000
   for: 180s
   labels:
     severity: warning
