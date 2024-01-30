@@ -15,7 +15,7 @@ RUN CGO_ENABLED=0 \
   go build -v -o app
 
 # copy compiled binary to a clear Alpine Linux image
-FROM alpine:3.19.0
+FROM alpine:3.19.1
 WORKDIR /
 RUN apk add --no-cache \
   ca-certificates
