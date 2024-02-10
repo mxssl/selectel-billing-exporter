@@ -16,28 +16,27 @@ Prometheus exporter для получения информации по билл
 
 ```yaml
 version: '3'
-
 services:
   selectel_exporter:
-    image: mxssl/selectel-billing-exporter:1.1.1
+    image: mxssl/selectel-billing-exporter:1.1.3
     ports:
       - "6789:80"
     restart: always
     environment:
-      TOKEN: тут_указываем_токен
+      TOKEN: <тут_указываем_токен>
 ```
 
 Запускаем экспортер:
 
 ```sh
-docker-compose up -d
+docker compose up -d
 ```
 
 Проверить работу экспортера:
 
 ```sh
-docker-compose ps
-docker-compose logs
+docker compose ps
+docker compose logs
 ```
 
 Метрики доступны по url `your_ip:6789/metrics`
@@ -68,7 +67,7 @@ spec:
     spec:
       containers:
         - name: exporter
-          image: mxssl/selectel-billing-exporter:1.1.1
+          image: mxssl/selectel-billing-exporter:1.1.3
           command: ["./app"]
           ports:
             - containerPort: 80
@@ -95,7 +94,7 @@ spec:
 kubectl apply -n exporters -f your-file.yaml
 ```
 
-Для namespace exporters метрики будут доступны по адресу `selectel-billing.exporters:6789/metrics`
+Внутри кластера метрики будут доступны по адресу `selectel-billing.exporters.svc.cluster.local:6789/metrics`
 
 ## Настройка для prometheus
 
@@ -103,7 +102,7 @@ kubectl apply -n exporters -f your-file.yaml
   - job_name: 'selectel_billing'
     scrape_interval: 60m
     static_configs:
-      - targets: ['exporter_ip:6789']
+      - targets: ['exporter_address:6789']
 ```
 
 ## Пример алерта для alertmanager
@@ -115,8 +114,8 @@ kubectl apply -n exporters -f your-file.yaml
   labels:
     severity: warning
   annotations:
-    summary: "{{ $labels.instance }}: В облаке Selectel на счете меньше 30 тыс рублей"
-    description: "Необходимо пополнить счет облака Selectel"
+    summary: "{{ $labels.instance }}: В хостинге Selectel на счете меньше 30 000 рублей"
+    description: "Необходимо пополнить счет в хостинге Selectel"
 ```
 
 ## Дашборд для графаны

@@ -1,10 +1,9 @@
 version: '3'
-
 services:
   selectel-billing-exporter:
     container_name: selectel-billing-exporter
     build: .
-    image: mxssl/selectel-billing-exporter:1.0.2
+    image: mxssl/selectel-billing-exporter:1.0.3
     ports:
       - "6789:80"
     restart: always

@@ -14,7 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// TOKEN for selectel API
+// TOKEN для Selectel API
 var TOKEN string
 
 type selectelBillingResponse struct {
@@ -55,7 +55,7 @@ func main() {
 		log.Fatal(srv.ListenAndServe())
 	}()
 
-	log.Println("Экспортер готов принимать запросы от прометеуса на /metrics")
+	log.Println("Экспортер готов принимать запросы от Prometheus на /metrics")
 
 	c := make(chan os.Signal, 1)
 

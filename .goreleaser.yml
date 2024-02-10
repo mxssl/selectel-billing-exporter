@@ -14,10 +14,9 @@ snapshot:
   name_template: "{{ .Tag }}"
 changelog:
   sort: asc
-  filters:
-    exclude:
-    - '^docs:'
-    - '^test:'
+archives:
+  - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    format: tar.gz
 dockers:
   - goos: linux
     goarch: amd64
