@@ -18,3 +18,18 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+dockers:
+  - goos: linux
+    goarch: amd64
+    image_templates:
+      - "mxssl/selectel-billing-exporter:latest"
+      - "mxssl/selectel-billing-exporter:{{ .Tag }}"
+    dockerfile: Dockerfile.ci
+    use: buildx
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/amd64"
+      - "--pull"
