@@ -18,7 +18,7 @@ Prometheus exporter для получения информации по билл
 version: '3'
 services:
   selectel_exporter:
-    image: mxssl/selectel-billing-exporter:1.1.3
+    image: mxssl/selectel-billing-exporter:1.1.4
     ports:
       - "6789:80"
     restart: always
@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
         - name: exporter
-          image: mxssl/selectel-billing-exporter:1.1.3
+          image: mxssl/selectel-billing-exporter:1.1.4
           command: ["./app"]
           ports:
             - containerPort: 80

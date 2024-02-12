@@ -30,5 +30,6 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/mxssl/selectel-billing-exporter"
       - "--platform=linux/amd64"
       - "--pull"
