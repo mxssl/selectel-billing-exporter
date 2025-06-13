@@ -26,6 +26,9 @@ init:
 tidy:
 	go mod tidy
 
+deps-update:
+	go get -u ./...
+
 github-release-dry:
 	@echo "TAG: ${TAG}"
 	goreleaser release --rm-dist --snapshot --skip-publish
