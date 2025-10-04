@@ -15,10 +15,9 @@ Prometheus exporter для получения информации по билл
 Создаем `docker-compose.yml` файл:
 
 ```yaml
-version: '3'
 services:
   selectel_exporter:
-    image: mxssl/selectel-billing-exporter:1.1.4
+    image: mxssl/selectel-billing-exporter:1.1.5
     ports:
       - "6789:80"
     restart: always
@@ -67,7 +66,7 @@ spec:
     spec:
       containers:
         - name: exporter
-          image: mxssl/selectel-billing-exporter:1.1.4
+          image: mxssl/selectel-billing-exporter:1.1.5
           command: ["./app"]
           ports:
             - containerPort: 80
@@ -99,10 +98,10 @@ kubectl apply -n exporters -f your-file.yaml
 ## Настройка для prometheus
 
 ```yaml
-  - job_name: 'selectel_billing'
-    scrape_interval: 60m
-    static_configs:
-      - targets: ['exporter_address:6789']
+- job_name: "selectel_billing"
+  scrape_interval: 60m
+  static_configs:
+    - targets: ["exporter_address:6789"]
 ```
 
 ## Пример алерта для alertmanager

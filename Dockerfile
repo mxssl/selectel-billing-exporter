@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.22.3-alpine3.18 as builder
+FROM golang:1.24-alpine as builder
 WORKDIR /go/src/github.com/mxssl/selectel-billing-exporter
 COPY . .
 RUN <<EOF
@@ -13,7 +13,7 @@ RUN <<EOF
   go build -v -o app
 EOF
 
-FROM alpine:3.22.1
+FROM alpine:3.22
 WORKDIR /
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /go/src/github.com/mxssl/selectel-billing-exporter .

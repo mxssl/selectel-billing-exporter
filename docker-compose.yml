@@ -1,4 +1,3 @@
-version: '3'
 services:
   selectel-billing-exporter:
     container_name: selectel-billing-exporter
