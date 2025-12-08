@@ -13,7 +13,7 @@ RUN <<EOF
   go build -v -o app
 EOF
 
-FROM alpine:3.22
+FROM alpine:3.23
 WORKDIR /
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /go/src/github.com/mxssl/selectel-billing-exporter .
