@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.26-alpine as builder
+FROM golang:1.27-alpine as builder
 WORKDIR /go/src/github.com/mxssl/selectel-billing-exporter
 COPY . .
 RUN <<EOF
