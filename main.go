@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"io"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -32,14 +35,17 @@ func main() {
 	log.Println("Устанавливаем Selectel токен...")
 	ok := false
 	TOKEN, ok = os.LookupEnv("TOKEN")
-	if !ok {
+	if !ok || strings.TrimSpace(TOKEN) == "" {
 		log.Fatal("Переменная окружения TOKEN, которая должна содержать Selectel API ключ не установлена")
 	}
 	log.Println("Токен успешно установлен!")
 
 	http.Handle("/metrics", promhttp.Handler())
 
-	go recordMetrics()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	gauges := initGauges()
+	go recordMetrics(ctx, gauges, time.Hour)
 
 	srv := &http.Server{
 		Addr: "0.0.0.0:80",
@@ -52,26 +58,23 @@ func main() {
 	}
 
 	go func() {
-		log.Fatal(srv.ListenAndServe())
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Ошибка HTTP-сервера: %v", err)
+		}
 	}()
 
 	log.Println("Экспортер готов принимать запросы от Prometheus на /metrics")
 
-	c := make(chan os.Signal, 1)
-
-	signal.Notify(c, os.Interrupt)
-
-	<-c
+	<-ctx.Done()
 
 	log.Println("Изящно завершаем работу экспортера...")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	err := srv.Shutdown(ctx)
+	err := srv.Shutdown(shutdownCtx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	os.Exit(0)
 }
 
 func initGauges() map[string]prometheus.Gauge {
@@ -93,46 +96,50 @@ func initGauges() map[string]prometheus.Gauge {
 	return promGauges
 }
 
-func recordMetrics() {
-	gauge := initGauges()
+func recordMetrics(ctx context.Context, gauges map[string]prometheus.Gauge, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
 	for {
-		s := selectelBillingResponse{}
-
-		// делаем запрос к Selectel API
-		if err := getSelectelBilling(&s); err != nil {
-			log.Printf("Не удалось получить ответ от Selectel API! Ошибка: %v\n", err)
-			continue
+		if ctx.Err() != nil {
+			return
 		}
-
-		// записываем метрики
-		gauge["selectel_billing_final_sum"].Set(float64(s.Data.Billings[0].FinalSum))
-		gauge["selectel_billing_debt_sum"].Set(float64(s.Data.Billings[0].DebtSum))
-
-		time.Sleep(time.Hour * 1)
+		var response selectelBillingResponse
+		if err := getSelectelBilling(ctx, &response); err != nil {
+			log.Printf("Не удалось получить ответ от Selectel API: %v", err)
+		} else {
+			gauges["selectel_billing_final_sum"].Set(float64(response.Data.Billings[0].FinalSum))
+			gauges["selectel_billing_debt_sum"].Set(float64(response.Data.Billings[0].DebtSum))
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
 	}
 }
 
-func getSelectelBilling(selectelMetrics *selectelBillingResponse) error {
-	client := &http.Client{}
-
-	req, err := http.NewRequest("GET", "https://api.selectel.ru/v3/balances", nil)
+func getSelectelBilling(ctx context.Context, selectelMetrics *selectelBillingResponse) error {
+	client := &http.Client{Timeout: 15 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.selectel.ru/v3/balances", nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Add("X-Token", TOKEN)
+	req.Header.Set("X-Token", TOKEN)
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
-
-	temp, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("selectel API returned HTTP %d", resp.StatusCode)
 	}
-
-	if err := json.Unmarshal(temp, &selectelMetrics); err != nil {
-		return err
+	var response selectelBillingResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return fmt.Errorf("decode Selectel billing response: %w", err)
 	}
-
+	if len(response.Data.Billings) == 0 {
+		return errors.New("selectel API returned no billing accounts")
+	}
+	*selectelMetrics = response
 	return nil
 }

@@ -31,11 +31,11 @@ deps-update:
 
 github-release-dry:
 	@echo "TAG: ${TAG}"
-	goreleaser release --rm-dist --snapshot --skip-publish
+	goreleaser release --clean --snapshot --skip=publish
 
 github-release:
 	@echo "TAG: ${TAG}"
-	goreleaser release --rm-dist
+	goreleaser release --clean
 
 docker-release:
 	@echo "Registry: ${DOCKER_REGISTRY}"

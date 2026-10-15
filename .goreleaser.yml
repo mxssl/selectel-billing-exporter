@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - go mod download
@@ -11,25 +12,26 @@ builds:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}"
+  version_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
 archives:
   - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
-    format: tar.gz
-dockers:
-  - goos: linux
-    goarch: amd64
-    image_templates:
-      - "mxssl/selectel-billing-exporter:latest"
-      - "mxssl/selectel-billing-exporter:{{ .Tag }}"
+    formats: [tar.gz]
+dockers_v2:
+  - images:
+      - "mxssl/selectel-billing-exporter"
+    tags:
+      - "latest"
+      - "{{ .Tag }}"
     dockerfile: Dockerfile.ci
-    use: buildx
-    build_flag_templates:
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source=https://github.com/mxssl/selectel-billing-exporter"
-      - "--platform=linux/amd64"
+    platforms:
+      - linux/amd64
+    labels:
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.source: "https://github.com/mxssl/selectel-billing-exporter"
+    flags:
       - "--pull"

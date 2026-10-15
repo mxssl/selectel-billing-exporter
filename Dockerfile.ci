@@ -4,6 +4,7 @@ WORKDIR /
 RUN <<EOF
   apk add --no-cache ca-certificates
 EOF
-COPY selectel-billing-exporter /app
+ARG TARGETPLATFORM
+COPY ${TARGETPLATFORM}/selectel-billing-exporter /app
 RUN chmod +x app
 CMD ["./app"]
