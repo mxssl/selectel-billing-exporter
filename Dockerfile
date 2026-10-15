@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.27-alpine as builder
+FROM golang:1.27-alpine AS builder
 WORKDIR /go/src/github.com/mxssl/selectel-billing-exporter
 COPY . .
 RUN <<EOF
@@ -16,6 +16,6 @@ EOF
 FROM alpine:3.24
 WORKDIR /
 RUN apk add --no-cache ca-certificates
-COPY --from=builder /go/src/github.com/mxssl/selectel-billing-exporter .
+COPY --from=builder /go/src/github.com/mxssl/selectel-billing-exporter/app /app
 RUN chmod +x app
 CMD ["./app"]
